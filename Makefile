@@ -1,7 +1,7 @@
 CC=clang
 
 test: wht4x4.c
-	$(CC) -O3 -march=native -DWHT_TEST -o $@ $< 
+	$(CC) -march=native -DWHT_TEST -o $@ $<
 
 clean:
-	rm -f test
+	rm -f test *.i *.o *.s
