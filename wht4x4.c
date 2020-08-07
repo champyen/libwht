@@ -152,7 +152,7 @@ void dump_matrix4x4_s16(short *mat, int pitch)
 int main(void)
 {
     uchar input[64];
-    short output[32];
+    short output[64];
     for(int i = 0; i < 32; i++){
         input[i] = i*8;
     }
