@@ -2,6 +2,71 @@
 
 #include "vec_type.h"
 
+void __wht4x4(short8 *data)
+{
+    short8 tmp[2];
+
+    tmp[0].lo = data[0].lo + data[0].hi + data[1].lo + data[1].hi;
+    tmp[0].hi = data[0].lo + data[0].hi - data[1].lo - data[1].hi;
+    tmp[1].lo = data[0].lo - data[0].hi - data[1].lo + data[1].hi;
+    tmp[1].hi = data[0].lo - data[0].hi + data[1].lo - data[1].hi;
+
+    /* 0, 2 */
+	//data[0] = __builtin_shufflevector( tmp[0], tmp[1], 0, 2, 8, 10, 4, 6, 12, 14 );
+	data[0] = __builtin_shufflevector( tmp[0], tmp[1], 0, 2, 4, 6, 8, 10, 12, 14 );
+	/* 1, 3 */
+	//data[1] = __builtin_shufflevector( tmp[0], tmp[1], 1, 3, 9, 11, 5, 7, 13, 15 );
+	data[1] = __builtin_shufflevector( tmp[0], tmp[1], 1, 3, 5, 7, 9, 11, 13, 15 );
+	//tmp[0] = __builtin_shufflevector( data[0], data[1], 0, 4, 2, 6, 8, 12, 10, 14 );
+	tmp[0] = __builtin_shufflevector( data[0], data[1], 0, 2, 4, 6, 8, 10, 12, 14 );
+	tmp[1] = __builtin_shufflevector( data[0], data[1], 1, 3, 5, 7, 9, 11, 13, 15 );
+
+    data[0].lo = (tmp[0].lo + tmp[0].hi + tmp[1].lo + tmp[1].hi) >> 2;
+    data[0].hi = (tmp[0].lo + tmp[0].hi - tmp[1].lo - tmp[1].hi) >> 2;
+    data[1].lo = (tmp[0].lo - tmp[0].hi - tmp[1].lo + tmp[1].hi) >> 2;
+    data[1].hi = (tmp[0].lo - tmp[0].hi + tmp[1].lo - tmp[1].hi) >> 2;
+
+    /* 0, 2 */
+	tmp[0] = __builtin_shufflevector( data[0], data[1], 0, 2, 4, 6, 8, 10, 12, 14 );
+	/* 1, 3 */
+	tmp[1] = __builtin_shufflevector( data[0], data[1], 1, 3, 5, 7, 9, 11, 13, 15 );
+	data[0] = __builtin_shufflevector( tmp[0], tmp[1], 0, 2, 4, 6, 8, 10, 12, 14 );
+	data[1] = __builtin_shufflevector( tmp[0], tmp[1], 1, 3, 5, 7, 9, 11, 13, 15 );
+}
+
+
+void wht4x4(uchar *src, int src_pitch, short *dst, int dst_pitch)
+{
+    short8 data[2];
+    for(int i = 0; i < 2; i++){
+        data[i].lo = __builtin_convertvector( *((uchar4*)(src+(i*2)*src_pitch)), short4);
+        data[i].hi = __builtin_convertvector( *((uchar4*)(src+(i*2+1)*src_pitch)), short4);
+    }
+
+	__wht4x4(data);
+
+    for(int i = 0; i < 2; i++){
+        *((short4*)(dst+(i*2)*dst_pitch)) = data[i].lo;
+        *((short4*)(dst+(i*2+1)*dst_pitch)) = data[i].hi;
+    }
+}
+
+void iwht4x4(short *src, int src_pitch, uchar *dst, int dst_pitch)
+{
+    short8 data[2];
+    for(int i = 0; i < 2; i++){
+        data[i].lo = *((short4*)(src+(i*2)*src_pitch));
+        data[i].hi = *((short4*)(src+(i*2+1)*src_pitch));
+    }
+
+	__wht4x4(data);
+
+    for(int i = 0; i < 2; i++){
+        *((uchar4*)(dst+(i*2)*dst_pitch)) = __builtin_convertvector(data[i].lo, uchar4);
+        *((uchar4*)(dst+(i*2+1)*dst_pitch)) = __builtin_convertvector(data[i].hi, uchar4);
+    }
+}
+
 void __dual_wht4x4(short8 *data)
 {
     short8 tmp[4];
@@ -153,6 +218,22 @@ int main(void)
 {
     uchar input[64]  __attribute__((aligned(32)));
     short output[64]  __attribute__((aligned(32)));
+
+    for(int i = 0; i < 16; i++){
+        input[i] = i*16;
+    }
+    printf("Input:\n");
+    dump_matrix4x4_u8(input, 4);
+
+    wht4x4(input, 4, output, 4);
+    printf("WHT 4x4:\n");
+    dump_matrix4x4_s16(output, 4);
+
+    iwht4x4(output, 4, input, 4);
+    printf("iWHT 4x4:\n");
+    dump_matrix4x4_u8(input, 4);
+
+
     for(int i = 0; i < 32; i++){
         input[i] = i*8;
     }
