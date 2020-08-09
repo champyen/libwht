@@ -5,7 +5,7 @@
 void __dual_wht4x4(short8 *data)
 {
     short8 tmp[4];
-	
+
     tmp[0] = data[0] + data[1] + data[2] + data[3];
     tmp[1] = data[0] + data[1] - data[2] - data[3];
     tmp[2] = data[0] - data[1] - data[2] + data[3];
@@ -65,7 +65,7 @@ void dual_iwht4x4(short *src, int src_pitch, uchar *dst, int dst_pitch)
 void __quad_wht4x4(short16 *data)
 {
     short16 tmp[4];
-	
+
     tmp[0] = data[0] + data[1] + data[2] + data[3];
     tmp[1] = data[0] + data[1] - data[2] - data[3];
     tmp[2] = data[0] - data[1] - data[2] + data[3];
@@ -151,8 +151,8 @@ void dump_matrix4x4_s16(short *mat, int pitch)
 #ifdef WHT_TEST
 int main(void)
 {
-    uchar input[64];
-    short output[64];
+    uchar input[64]  __attribute__((aligned(32)));
+    short output[64]  __attribute__((aligned(32)));
     for(int i = 0; i < 32; i++){
         input[i] = i*8;
     }
